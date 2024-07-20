@@ -27,7 +27,7 @@ public class ProfilePage : MonoBehaviour
            EyesID = PlayerPrefs.GetInt("Eyes");
            ColorID = PlayerPrefs.GetInt("Color");
            Gender = (PlayerPrefs.GetInt("Gender") == 0);
-           Username = "Player123"; 
+           Username = PlayerPrefs.GetString("PlayerName");
            UpdateChar();
         }
         else
