@@ -1,0 +1,5 @@
+<linker>
+    <assembly fullname="ChessEngine.AI.Doofus">
+        <namespace fullname="ChessEngine.AI.Doofus" preserve="all"/>
+    </assembly>
+</linker>

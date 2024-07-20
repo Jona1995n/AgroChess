@@ -1,0 +1,5 @@
+<linker>
+    <assembly fullname="ChessEngine.AI.Guy">
+        <namespace fullname="ChessEngine.AI.Guy" preserve="all"/>
+    </assembly>
+</linker>

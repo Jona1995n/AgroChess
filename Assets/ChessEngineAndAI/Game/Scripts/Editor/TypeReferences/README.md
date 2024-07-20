@@ -1,0 +1,1 @@
+These scripts simply register the types from relevant chess modules with the 'TypeReferences' module.

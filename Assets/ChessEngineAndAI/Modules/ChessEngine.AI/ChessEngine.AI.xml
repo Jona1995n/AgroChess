@@ -1,0 +1,212 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ChessEngine.AI</name>
+    </assembly>
+    <members>
+        <member name="T:ChessEngine.AI.ChessAI">
+            <summary>
+            An abstract class that is the base type for all chess AIs.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.TimeManager">
+            <summary>A reference to the TimeManager used by this ChessAI.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.IsBestMoveDelayed">
+            <summary>Returns true if the there is currently a delay preventing this ChessAI from submitting a best move (unless demanded).</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.DelayBestMoveToTime">
+            <summary>When not equal to float.NegativeInfinity this chess AI does not submit a best move (unless demanded) til at TimeManager.ElapsedTime is >= DelayBestMoveToTime.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.Team">
+            <summary>The team the AI is playing for.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.ChessInstance">
+            <summary>A reference to an instance of a chess engine that contains the current state of the game.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.IsBestMovePending">
+            <summary>Returns true if the AI is currently generating a 'best move', otherwise false.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.BestMoveRequestTime">
+            <summary>The TimeManager.ElapsedTime the 'best move' was requested at.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.BestMoveSearchDepth">
+            <summary>The maximum search depth specified with the last 'best move' request.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.BestMoveSearchTime">
+            <summary>The maximum search time in milliseconds specified with the last 'best move' request.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.ChessAI.BestMoveSubmitGrace">
+            <summary>An optional grace period that an AI can implement. Useful for external AI engines where communication of the computed move may be delayed. This should only even be set by the AI implementation itself.</summary>
+        </member>
+        <member name="E:ChessEngine.AI.ChessAI.BestMoveRequested">
+            <summary>
+            An event that is invoked whenever a 'best move' is requested from the AI.
+            Arg0: int - Search depth, the maxmimum depth the AI is allowed to look for moves at.
+            Arg1: float - Search time, the maximum time in milliseconds the AI can spend coming up with a 'best move'.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.AI.ChessAI.BestMoveSubmitted">
+            <summary>
+            An event that is invoked whenever the AI submits a 'best move'.
+            Arg0: TileIndex - The 'from' tile index.
+            Arg1: TileIndex - The 'to' tile index.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.AI.ChessAI.SubscribedToChessInstance">
+            <summary>
+            An event that is invoked after the AI subscribes to a given chess Instance.
+            Arg0: Instance - The chess instance the AI subscribed to.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.AI.ChessAI.UnsubscribedFromChessInstance">
+            <summary>
+            An event that is invoked after the AI unsubscribes from a given chess Instance.
+            Arg0: Instance - The chess instance the AI unsubscribed from.
+            </summary>
+        </member>
+        <member name="F:ChessEngine.AI.ChessAI.m_ChessInstance">
+            <summary>The hidden backing field for the 'ChessInstance' property.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.Update">
+            <summary>Should be invoked every frame to update the Chess AI even when it is not its turn.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.RequestBestMove(System.Int32,System.Single)">
+            <summary>Submit a best move request to the AI.</summary>
+            <param name="pMaxDepth">The maximum depth the AI can explore. If less than or equal to 0 then this is infinite.</param>
+            <param name="pMaxTime">The maximum time in milliseconds the AI can spend coming up with a 'best move'. If less than or equal to 0 then this is infinite.</param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.DelayBestMove(System.Single)">
+            <summary>Delays the submission of this ChessAIs best move (unless demanded) for pSeconds seconds.</summary>
+            <param name="pSeconds">The number of seconds to delay the best move submission (unless demanded) for.</param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.CheckIfMoveTimeExpired">
+            <summary>
+            Checks if the move time has expired for the chess AI, if it has the best move is demanded automatically.
+            WARNING: The best move may be submitted after calling this method.
+            </summary>
+            <returns>true if the best move think time is expired, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SetInstance(ChessEngine.Instance)">
+            <summary>
+            Directly set the 'ChessInstance' for this AI.
+            This cam be useful for instances where the GUI wants the ChessAI to use its exact state.</summary>
+            <param name="pInstance">The ChessInstance reference to use as this AIs game state.</param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SetStateToNewGame">
+            <summary>Resets the chess engine instance to a 'new game' state.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SetStateToFEN(System.String)">
+            <summary>Sets the ChessInstance's state based on the provided FEN string.</summary>
+            <param name="pFEN"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SetStateToSerialized(ChessEngine.Serialization.SerializedChessInstance)">
+            <summary>Sets the ChessInstance's state based on the provided SerialziedChessInstance.</summary>
+            <param name="pInstance"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.GetPieces(ChessEngine.ChessColor,ChessEngine.Instance)">
+            <summary>Returns a list of all chess pieces for the specified team in the given chess Instance.</summary>
+            <param name="pTeam"></param>
+            <param name="pInstance">The chess Instance to look for pieces of the specified team on.</param>
+            <returns>A List of all chess pieces of the specified team in the given chess Instance.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.GetValidAttackEntries(System.Collections.Generic.List{ChessEngine.ChessPiece})">
+            <summary>Given a list of chess pieces returns a list of all valid attack entries for all pieces in the list.</summary>
+            <param name="pPieces"></param>
+            <returns>A List of all valid attacks for all pieces in the given pieces list.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.GetValidMoveEntries(System.Collections.Generic.List{ChessEngine.ChessPiece})">
+            <summary>Given a list of chess pieces returns a list of all valid move entries for all pieces the the list.</summary>
+            <param name="pPieces"></param>
+            <returns>A List of all valid moves for all pieces in the given pieces list.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnInitialized">
+            <summary>
+            Invoked when the AI is first initialized by the game.
+            Recommended to subscribe to any relevant events here.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnDeinitialized">
+            <summary>
+            Invoked when the AI is deinitialized by the game.
+            Recommended to unsubscribe to any relevant events here. (Doing so in the destructor is unreliable.)
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnUpdate">
+            <summary>
+            Invoked after every 'Update' call.
+            Useful for executing any logic every frame.
+            Recommended AI best move determination logic is here, you can use 'IsBestMovePending' to check if there is a best move to limit planning time only to during best move requests.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnBestMoveRequestUpdate">
+            <summary>
+            Invoked after every 'OnUpdate' in any frame where 'IsBestMovePending == true' and 'IsBestMoveDelayed == false'.
+            Logic to determine best moves should not be executed in this loop as a submission delay causes it to not be executed.
+            It is best practice to submit ready best moves in this callback unless they were demanded, this will prevent any non-demanded submissions while there is a best move submission delay set.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnBestMoveRequested(System.Int32,System.Single)">
+            <summary>Invoked immediately after a best move is requested.</summary>
+            <param name="pMaxDepth">The maximum depth the AI can explore. If less than or equal to 0 then this is infinite.</param>
+            <param name="pMaxTime">The maximum time in milliseconds the AI can spend coming up with a 'best move'. If less than or equal to 0 then this is infinite.</param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnBestMoveDemanded">
+            <summary>
+            Invoked immediately after ChessAI.DemandBestMove() is invoked, this tells the chess AI that a 'best move' is being immediately demanded.
+            It is the responsibility of the AI to then submit the actual move using ChessAI.SubmitBestMove(TileIndex pFrom, TileIndex pTo).
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnBestMoveSubmitted(ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked after a 'best move' is submitted by the Chess AI.</summary>
+            <param name="pFrom"></param>
+            <param name="pTo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked whenever a chess piece managed by the relevant ChessInstance is moved.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnPreChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked just before a chess piece managed by the relevant ChessInstance is moved.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnTurnEnded(ChessEngine.ChessColor,ChessEngine.MoveInfo)">
+            <summary>Invoked after a chess teams turn ends.</summary>
+            <param name="pLastTurn"></param>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnTurnStarted(ChessEngine.ChessColor)">
+            <summary>Invoked after a chess teams turn starts.</summary>
+            <param name="pTurn"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnGameOver(ChessEngine.ChessColor,ChessEngine.GameOverReason)">
+            <summary>Invoked after a chess game ends.</summary>
+            <param name="pTurn"></param>
+            <param name="pReason"></param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnPreGameReset">
+            <summary>Invoked just before a chess game is reset.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnPostGameReset">
+            <summary>Invoked just after a chess game is reset.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.OnInstancePreDestructed">
+            <summary>Invoked just before the relevant ChessInstance is destructed.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.DemandBestMove">
+            <summary>Demands that the AI submit a best move immediately.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SubmitBestMove(ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Submits a best move from the tile pFrom to pTo.</summary>
+            <param name="pFrom">The tile the moving/attacking piece is moving from.</param>
+            <param name="pTo">The tile the moving/attacking piece is moving to.</param>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.SubscribeToChessInstance">
+            <summary>Subscribes to 'ChessInstance' assuming it is non-null.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.ChessAI.UnsubscribeFromChessInstance">
+            <summary>Unsubscribes from 'ChessInstance'.</summary>
+        </member>
+    </members>
+</doc>

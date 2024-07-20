@@ -1,0 +1,5 @@
+<linker>
+    <assembly fullname="ChessEngine.AI.Riddle">
+        <namespace fullname="ChessEngine.AI.Riddle" preserve="all"/>
+    </assembly>
+</linker>

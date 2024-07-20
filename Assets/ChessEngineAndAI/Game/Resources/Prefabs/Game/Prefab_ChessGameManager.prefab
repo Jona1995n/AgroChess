@@ -1,0 +1,185 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3951992276191105063
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 3951992276191105066}
+  - component: {fileID: 3951992276191105065}
+  - component: {fileID: 3951992276191105064}
+  - component: {fileID: 1276431378424613338}
+  m_Layer: 0
+  m_Name: Prefab_ChessGameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &3951992276191105066
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3951992276191105063}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 0
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &3951992276191105065
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3951992276191105063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: be48c366d1b9a6944a35b8966fd22bc2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  autoStartGame: 1
+  visualTable: {fileID: 3951992276191105064}
+  m_SelectedHighlightMaterial: {fileID: 2100000, guid: 02430b8ffa76f5b4a93f1c7d474e5b83, type: 2}
+  m_MoveHighlightMaterial: {fileID: 2100000, guid: 7f8d3f16e7565e948b18632d8b02d981, type: 2}
+  m_AttackHighlightMaterial: {fileID: 2100000, guid: ccf97460e38c8ce4781c3a2220959f5c, type: 2}
+  GameInitialized:
+    m_PersistentCalls:
+      m_Calls: []
+  TurnEnded:
+    m_PersistentCalls:
+      m_Calls: []
+  TurnStarted:
+    m_PersistentCalls:
+      m_Calls: []
+  PreGameReset:
+    m_PersistentCalls:
+      m_Calls: []
+  PostGameReset:
+    m_PersistentCalls:
+      m_Calls: []
+  GameOver:
+    m_PersistentCalls:
+      m_Calls: []
+  SelectionChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  ChessPieceMoved:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!114 &3951992276191105064
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3951992276191105063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef458bceb9ecd164aa30db81abbcc256, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_TilePrefab: {fileID: 113148791281408626, guid: e0bc9c42c24221b4480d921329cf0f05, type: 3}
+  m_KingPiecePrefab: {fileID: 7472559920320602596, guid: f63b2895f77ea6d45ab4f58d7259749c, type: 3}
+  m_QueenPiecePrefab: {fileID: 1508897536138677703, guid: 219c49113a3792f4394c0394487898d2, type: 3}
+  m_BishopPiecePrefab: {fileID: 1931467491118193476, guid: 14033f407b1722b43bfdb8559ab2b148, type: 3}
+  m_KnightPiecePrefab: {fileID: 962797865098650304, guid: 809e14734ca97e942a949d67595cfb70, type: 3}
+  m_RookPiecePrefab: {fileID: 1451242714601956905, guid: 329345b4e80b5e245bbbff923d7c74b4, type: 3}
+  m_PawnPiecePrefab: {fileID: 4466610404413648318, guid: ffb7252fd57780b44920ce9aced5dbb5, type: 3}
+--- !u!114 &1276431378424613338
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3951992276191105063}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efdbabe7119a9f742acf47bf42684f97, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  MoveUndone:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.GameObject, UnityEngine
+        m_MethodName: SetActive
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  MoveRedone:
+    m_PersistentCalls:
+      m_Calls: []
+  MoveHistoryEmptied:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Selectable, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  MoveHistoryValid:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Selectable, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2
+  UndoHistoryEmptied:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Selectable, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
+  UndoHistoryValid:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 0}
+        m_TargetAssemblyTypeName: UnityEngine.UI.Selectable, UnityEngine.UI
+        m_MethodName: set_interactable
+        m_Mode: 6
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 1
+        m_CallState: 2

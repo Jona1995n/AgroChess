@@ -1,0 +1,1691 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ChessEngine</name>
+    </assembly>
+    <members>
+        <member name="T:ChessEngine.ChessColor">
+            <summary>
+            Represents the colors of the tiles and pieces on the chess table.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="T:ChessEngine.ChessPiece">
+            <summary>
+            An abstract component intended to be inherited from to define the behaviours of individual chess pieces.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.ChessPiece.PreMoved">
+            <summary>
+            An event that is invoked just before this chess piece is moved (just after virtual OnPreMoved).
+            Arg0: ref MoveInfo - The MoveInfo about the impending move, a reference that may be modified.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.Moved">
+            <summary>
+            An event that is invoked when this chess piece is moved.
+            Arg0: MoveInfo - The MoveInfo about the move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.MovesOverrideCallback">
+            <summary>
+            A simple callback that is invoked after potential moves for a chess piece are calculated, before the moves are validated.
+            Arg0: ChessPiece - The ChessPiece who invoked the callback.
+            Arg1: List of ChessTableTiles - the list of potential (not neccesarily valid) moves for the chess piece.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.AttacksOverrideCallback">
+            <summary>
+            A simple callback that is invoked after potential attacks for a chess piece are calculated, before the attacks are validated.
+            Arg0: ChessPiece - The ChessPiece who invoked the callback.
+            Arg1: List of AttackInfos - the list of potential (not neccesarily valid) attacks for the chess piece.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.Captured">
+            <summary>
+            An event that is invoked when this chess piece is captured.
+            Arg0: MoveInfo - The MoveInfo about the move the piece was captured on.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.PreCaptured">
+            <summary>
+            An event that is invoked just before this chess piece is captured.
+            Arg0: MoveInfo - The MoveInfo about the move the piece was captured on.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.IsMoveValidCallback">
+            <summary>
+            Invoked during move validity checking to allow external programs to subscribe and override move validity for this chess piece.
+            Arg0: ChessTableTile - The tile being moved to.
+            Arg1: ref bool - A reference to a boolean value that controls whether or not a move is valid.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessPiece.IsAttackValidCallback">
+            <summary>
+            Invoked during attack validity checking to allow external programs to subscribe and override attack validity for this chess piece.
+            Arg0: AttackInfo - The information about the attack.
+            Arg1: ref bool - A reference to a boolean value that controls whether or not an attack is valid.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.ForwardY">
+            <summary>
+            Returns the 'forward' y direction for this chess piece, i.e. 1 on white team -1 on black.
+            </summary>
+        </member>
+        <member name="F:ChessEngine.ChessPiece.RightX">
+            <summary>
+            Returns the 'right' x direction for this chess piece, i.e. 1 on both teams.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.Table">
+            <summary>
+            Returns the ChessTable that this ChessPiece belongs to.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.Tile">
+            <summary>
+            Returns the Tile this ChessPiece lays on based on it's tile index.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.Color">
+            <summary>
+            Returns the ChessColor team/color that this ChessPiece belongs to.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.IsCaptured">
+            <summary>Returns true if this piece has been captured, otherwise false.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.MoveCount">
+            <summary>The number of moves this chess piece has made.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessPiece.TileIndex">
+            <summary>Represents the chess table tile this chess piece is on.</summary>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.#ctor(ChessEngine.ChessTable,ChessEngine.ChessColor,ChessEngine.TileIndex)">
+            <summary>Invoked whenever a ChessPiece instance is constructed.</summary>
+            <param name="pTable">The ChessTable the piece belongs to.</param>
+            <param name="pColor">The ChessColor of the team the piece belongs to.</param>
+            <param name="pTileIndex">The TileIndex the chess piece starts on.</param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.#ctor(ChessEngine.ChessTable,ChessEngine.ChessPiece)">
+            <summary>Constructs a ChessPiece instance that is a copy of pOther except belonging to the pTable chess table.</summary>
+            <param name="pTable"></param>
+            <param name="pOther"></param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.Move(ChessEngine.TileIndex,ChessEngine.ChessPiece)">
+            <summary>Moves the chess piece to the given TileIndex, invokes the 'Moved' event.</summary>
+            <param name="pToTileIndex"></param>
+            <param name="pAttackingPiece">The ChessPiece being attacked, or null if no attack (en passant excluded as it is handled specially by the pawns 'OnMoved' override).</param>
+            <returns>MoveInfo containing information about the move.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.Capture(ChessEngine.MoveInfo)">
+            <summary>Marks the ChessPiece as captured.</summary>
+            <param name="pMoveInfo">The MoveInfo for the move that was piece was captured on.</param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetMoves">
+            <summary>
+            Returns a list with the ChessTabletiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetAttacks(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <param name="pSpoofOccupiedTile">The tile to test as 'occupied' or null.</param>
+            <param name="pSpoofUnoccupiedTile">The tile to test as 'unoccupied' or null.</param>
+            <returns>A list of ChessTableTiles for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetValidMoves">
+            <summary>
+            Uses overrideable GetMove() to get a list of moves and then filters them based on current check status, and whether or not the move will put you in check.
+            </summary>
+            <returns>A list of valid tiles to move to.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetValidAttacks">
+            <summary>
+            Uses overrideable GetAttacks() to get a list of attacks and then filters them based on current check status, and whether or not the attack will put you in check.
+            </summary>
+            <returns>A list of valid AttackInfos for attacks.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTabletiles of all possible moves for this piece. (These moves are not neccesarily valid and may be prevented by check, or other scenarios.)
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece. (These attacks are not neccesarily valid and may be prevented by check, or other scenarios.)
+            </summary>
+            <param name="pSpoofOccupiedTile">The tile to test as 'occupied' or null.</param>
+            <param name="pSpoofUnoccupiedTile">The tile to test as 'unoccupied' or null.</param>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.OnPreMoved(ChessEngine.MoveInfo@)">
+            <summary>Invoked just before the piece moves.</summary>
+            <param name="pMoveInfo">A reference to the MoveInfo. Can be changed before move is made.</param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.OnPostMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked just after the piece moves.</summary>
+            <param name="pMoveInfo">The info for the move that was made.</param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.OnTileIndexChanged(System.Boolean,ChessEngine.TileIndex)">
+            <summary>
+            Executed automatically when the TileIndex of the ChessPiece is changed.
+            </summary>
+            <param name="pWasEmpty">Was the space empty prior to the move?</param>
+            <param name="pOldIndex">The previous index of the chess piece.</param>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessPiece.GetChessPieceType">
+            <summary>Returns the ChessPieceType for the ChessPiece.</summary>
+            <returns>the ChessPieceType for the ChessPiece.</returns>
+        </member>
+        <member name="T:ChessEngine.ChessTable">
+            <summary>
+            The ChessTable component is to be attached to a gameObject on which 'ChessTableTiles' will be created.
+            
+            NOTE: Chess tables are implemented with a bottom left origin meaning Tiles[0][0] is the bottom-left most corner when the white team is at the 'bottom' of the board.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.ChessTable.Tiles">
+            <summary>A 2D array of ChessTableTiles.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessTable.ChessInstance">
+            <summary>A reference to the Instance that this ChessTable belongs to.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessTable.PieceCount">
+            <summary>Returns the # of chess pieces on the chess table.</summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.ChessPiecesReset">
+            <summary>An event that is invoked whenever the chess pieces on this table are reset.</summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.ChessPieceCreated">
+            <summary>
+            An event that is invoked whenever a chess piece is created.
+            Arg0: ChessPiece - the ChessPiece that was being created.
+            Arg1: TileIndex - the TileIndex the chess piece was created on.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.ChessPieceDestroyed">
+            <summary>
+            An event that is invoked whenever a chess piece is removed from the table.
+            Arg0: ChessPiece - the ChessPiece that is being destroyed.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.ChessPieceMoved">
+            <summary>
+            An event that is invoked whenever a ChessPiece that belongs to this table moves for any reason. (Moved by 'Instance', moved by through ChessPiece.Move(...) directly, etc...)
+            Unlike Instance.ChessPieceMoved this event is invoked regardless of what causes the chess piece to move except for the exception noted below.
+            
+            EXCEPTION: This is not invoked when a rook is moved due to castling since it is not a 'move' for the rook, it is the kings move.
+            
+            Arg0: MoveInfo - information about the move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.PreChessPieceMoved">
+            <summary>
+            An event that is invoked just before a ChessPiece that belongs to this table moves for any reason. (Moved by 'Instance', moved by through ChessPiece.Move(...) directly, etc...)
+            Unlike Instance.PreChessPieceMoved this event is invoked regardless of what causes the chess piece to move except for the exception noted below.
+            
+            EXCEPTION: This is not invoked when a rook is moved due to castling since it is not a 'move' for the rook, it is the kings move.
+            
+            Arg0: MoveInfo - information about the upcoming move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.Castled">
+            <summary>
+            Invoked whenever chess pieces perform a castle move on this table.
+            
+            NOTE: You can use the last invokation of the 'ChessPieceMoved' event to get the exact move details that led to the castle.
+            
+            Arg0: ChessPiece - The king chess piece involved in the castle.
+            Arg1: ChessPiece - The rook chess piece involved in the castle.
+            Arg2: TileIndex - The TileIndex of the rook before castling.
+            Arg3: TileIndex - The TileIndex of the rook after castling.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.CreatedSerializedChessPiece">
+            <summary>
+            An event that is invoked whenever a chess piece is created via a serialized chess piece.
+            Useful when extending serialization behavior outside of the library.
+            
+            Arg0: ChessPiece - The ChessPiece that was created.
+            Arg1: SerializedChessPiece - The SerializedChessPiece the piece was created from.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.LoadedSerializedTable">
+            <summary>
+            An event that is invoked whenever a chess table is constructed using a SerializedChessTable or has it's state set using one.
+            Useful when extending serialization behavior outside of the library.
+            
+            Arg0: ChessTable - The ChessTable the serialized table was loaded to.
+            Arg1: SerializedChessTable - The SerializedChessTable that was 'loaded'.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.ChessTable.ShouldDefaultPiecesSpawnCallback">
+            <summary>
+            Invoked during a table chess piece reset to allow listeners to override the default piece spawning behaviour of the ChessTable.
+            NOTE: To completely replace spawned pieces behaviour simply set the 'ref bool (arg1)' argument to false to command the engine not to spawn any chess pieces.
+            Arg0: ChessTable - The ChessTable who is checking for permission to spawn default pieces.
+            Arg1: ref bool - A reference to a boolean value that will flip the game to a 'Unknown' game over reason state if it becomes true.
+            </summary>
+        </member>
+        <member name="F:ChessEngine.ChessTable.m_ChessPieces">
+            <summary>The list of chess pieces on the table.</summary>
+        </member>
+        <member name="M:ChessEngine.ChessTable.#ctor(ChessEngine.Instance)">
+            <summary>Invoked whenever a ChessTable instance is constructed.</summary>
+            <param name="pChessInstance">The chess engine Instance that this table belongs to.</param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.#ctor(ChessEngine.Instance,ChessEngine.ChessTable)">
+            <summary>Creates a copy of the chess table pOther that belongs to the Instance pChessInstance.</summary>
+            <param name="pChessInstance"></param>
+            <param name="pOther"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.#ctor(ChessEngine.Instance,ChessEngine.Serialization.SerializedChessTable)">
+            <summary>Constructs a new chess table instance belonging to the pChessInstance Instance. Copies the state of the provided pSerializedTable.</summary>
+            <param name="pChessInstance">The chess engine Instance that this table belongs to.</param>
+            <param name="pSerializedTable">The SerializedChessTable to copy the state of.</param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.SetState(ChessEngine.Serialization.SerializedChessTable)">
+            <summary>Overwrites the state of the Table with the information from pSerializedTable without needing to construct a new ChessTable.</summary>
+            <param name="pSerializedTable"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateSerializedPiece(ChessEngine.Serialization.SerializedChessPiece)">
+            <summary>Creates a ChessPiece from a SerializedChessPiece and returns it.</summary>
+            <param name="pSerializedPiece"></param>
+            <returns>the ChessPiece that was constructed from the SerializedChessPiece, otherwise null if failed.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.ResetChessPieces">
+            <summary>When called removes all existing chess pieces and instantiates new ones at their proper initiual spawn locations.</summary>
+        </member>
+        <member name="M:ChessEngine.ChessTable.DestroyChessPieces">
+            <summary>Destroys all existing chess pieces.</summary>
+        </member>
+        <member name="M:ChessEngine.ChessTable.SpawnDefaultPieces">
+            <summary>Spawns the default chess pieces (if not overridden by 'ShouldSpawnDefaultPiecesCallback' listener(s)).</summary>
+        </member>
+        <member name="M:ChessEngine.ChessTable.IsInCheck(ChessEngine.ChessColor)">
+            <summary>Returns true if the team with the specified color is in check, otherwise false.</summary>
+            <param name="pTeamColor"></param>
+            <returns>true if the team pTeamColor is in check, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetTile(ChessEngine.TileIndex)">
+            <summary>Returns Tiles[pTileIndex.x][pTileIndex.y].</summary>
+            <param name="pTileIndex"></param>
+            <returns>A reference to the ChessTableTile in Tiles[pTileIndex.x][pTileIndex.y].</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetTile(System.Int32,System.Int32)">
+            <summary>Returns Tiles[pX][pY].</summary>
+            <param name="pX"></param>
+            <param name="pY"></param>
+            <returns>A reference to the ChessTableTile in Tiles[pX][pY].</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetTileByID(System.String)">
+            <summary>Returns the ChessTableTile where ChessTableTile.TileIndex.GetTileID() == pID, otherwise null.</summary>
+            <param name="pID"></param>
+            <returns>the ChessTableTile where ChessTableTile.TileIndex.GetTileID() == pID, otherwise null</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateKing(ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>Instantiates a king and returns the ChessPiece, or null.</summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <returns>ChessPiece component of the instantiated king or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateQueen(ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>
+            Instantiates a queen and returns the ChessPiece, or null.
+            This method is public because the Pawn needs to beable to replace itself with a queen.
+            </summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <returns>ChessPiece component of the instantiated queen or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateBishop(ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>
+            Instantiates a bishop and returns the ChessPiece, or null.
+            </summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <returns>ChessPiece component of the instantiated bishop or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateKnight(ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>
+            Instantiates a knight and returns the ChessPiece, or null.
+            </summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <returns>ChessPiece component of the instantiated knight or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreateRook(ChessEngine.TileIndex,ChessEngine.ChessColor,System.Boolean)">
+            <summary>
+            Instantiates a rook and returns the ChessPiece, or null.
+            </summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <param name="pIsKingSide">true if the Rook is the king side Rook, otherwise false if it is the queen side Rook.</param>
+            <returns>ChessPiece component of the instantiated rook or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreatePawn(ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>Instantiates a pawn and returns the ChessPiece, or null.</summary>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+            <returns>ChessPiece component of the instantiated pawn or null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.CreatePieceByType(ChessEngine.ChessPieceType,ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>
+            Instantiates a chess piece of the given type and returns it, or null.
+            </summary>
+            <param name="pType"></param>
+            <param name="pTileIndex"></param>
+            <param name="pColor"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.DestroyPiece(ChessEngine.ChessPiece)">
+            <summary>Removes the specified ChessPiece from the table if it is a part of it.</summary>
+            <param name="pPiece"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.DestroyPieceByIndex(System.Int32)">
+            <summary>Removes the ChessPiece in the specifeid index from the table.</summary>
+            <param name="pPieceIndex"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetPieceByIndex(System.Int32)">
+            <summary>
+            Returns the ChessPiece in the given index of the 'chess pieces' array.
+            Note that 'PieceCount' can be used to get the total # of pieces on the table.
+            </summary>
+            <param name="pIndex"></param>
+            <returns>the ChessPiece in the given index of the 'chess pieces' array.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetKing(ChessEngine.ChessColor)">
+            <summary>Returns a reference to the King piece of the team of the specified color.</summary>
+            <param name="pColor"></param>
+            <returns>a reference to the King piece of the team of the specified color.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GetRookReferences">
+            <summary>
+            Returns a RookReferences object that contains references to all Rook pieces (captured or not) and organizes them based on their team color and 'king' or 'queen' side.
+            </summary>
+            <returns>a RoookReferences object that contains references to all Rook pices (captured or not).</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.DetermineRookSides(System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Generally used after loading an EPD state, this function will automatically attempt to determine the king and queen side Rooks or pick them at random.
+            NOTE: Do not invoke this unless you know exactly why you want to invoke this.
+            SIDE EFFECT: This will adjust the Rooks move counts based on the castle states.
+            
+            How Rook sides are determined:
+                - If a castle is possible we can guarentee the relevant Rook is in the initial position and can accurately set it to king or queenside.
+                - When a castle is not possible on both sides:
+                    1. The initial spawn locations will be checked for Rooks... if found they will be set to their relevant appropriate side.
+                    2. If no Rook found in both spawn positions the sides of the Rooks will be chosen at random.
+            </summary>
+            <param name="pCanWhiteCastleKingside"></param>
+            <param name="pCanWhiteCastleQueenside"></param>
+            <param name="pCanBlackCastleKingside"></param>
+            <param name="pCanBlackCastleQueenside"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.GenerateEPDString">
+            <summary>Generates an EPD string based on the current table layout and returns it.</summary>
+            <returns>An EPD string based on the current table layout.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.SetStateToEPD(System.String,System.Boolean,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>Sets the state of the chess table using the 'EPD' string given by pEPD.</summary>
+            <param name="pEPD">The EPD string that contains the chess table state.</param>
+            <param name="pCanWhiteCastleKingside"></param>
+            <param name="pCanWhiteCastleQueenside"></param>
+            <param name="pCanBlackCastleKingside"></param>
+            <param name="pCanBlackCastleQueenside"></param>
+            <returns>true if the EPD string was successfully parsed, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTable.Internal_OnChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>An internal callback that is invoekd whenever a chess piece on this table is moved.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.Internal_OnCastle(ChessEngine.ChessPiece,ChessEngine.ChessPiece,ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked just after a king castles with a rook.</summary>
+            <param name="pKing"></param>
+            <param name="pRook"></param>
+            <param name="pPreCastleRookTile"></param>
+            <param name="pPostCastleRookTile"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTable.OnPieceCreated(ChessEngine.ChessPiece,ChessEngine.TileIndex)">
+            <summary>Invoked whenever a chess piece is created on this table.</summary>
+            <param name="pPiece">The ChessPiece that was created.</param>
+            <param name="pTileIndex">The tile index the piece was created on.</param>
+        </member>
+        <member name="T:ChessEngine.ChessTableTile">
+            <summary>
+            A ChessTableTile component is to be attached to each individual tile that makes up a chess table, each tile holds information about intself like offset.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.ChessTableTile.TileIndex">
+            <summary>Returns the TileIndex this tile is located at.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessTableTile.Table">
+            <summary>Returns the ChessTable this tile belongs to.</summary>
+        </member>
+        <member name="P:ChessEngine.ChessTableTile.Color">
+            <summary>Returns the ChessColor of this tile.</summary>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.#ctor(ChessEngine.ChessTable,ChessEngine.TileIndex,ChessEngine.ChessColor)">
+            <summary>Constructs a ChessTableTile instance.</summary>
+            <param name="pTable">The ChessTable the tile belongs to.</param>
+            <param name="pTileIndex">The TileIndex for the tile.</param>
+            <param name="pTileColor">The ChessColor for the tile.</param>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.#ctor(ChessEngine.ChessTable,ChessEngine.ChessTableTile)">
+            <summary>Creates a copy of pOther except on the 'Table' pTable.</summary>
+            <param name="pTable"></param>
+            <param name="pOther"></param>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.MovePieceToTile(ChessEngine.ChessPiece)">
+            <summary>Moves the specified chess piece to this tile.</summary>
+            <param name="pPiece">The ChessPiece to move.</param>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.GetPiece">
+            <summary>
+            Returns the ChessPiece on this tile, otherwise null.
+            Only valid when called after this tile has been placed on the board using 'PlaceAtIndex'.
+            </summary>
+            <returns>ChessPiece on this tile, otherwise null.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.IsTileThreatened(System.Collections.Generic.List{ChessEngine.AttackInfo},ChessEngine.ChessTableTile)">
+            <summary>
+            Returns true if any attack in the pAttacks list is threatening the tile pTile (if a piece may be captured on said tile), otherwise false.
+            This compares 'pTile' to AttackInfo.attackTile.
+            </summary>
+            <param name="pAttacks">The valid 'enemy' attacks.</param>
+            <param name="pTile">The tile being moved to.</param>
+            <returns>true if any attack in the pAttacks list is threatening the tile pTile, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.ChessTableTile.IsTileAttackable(System.Collections.Generic.List{ChessEngine.AttackInfo},ChessEngine.ChessTableTile)">
+            <summary>
+            Returns true if any attack in the pAttacks list is able to move to the tile pTile, otherwise false.
+            This compares 'pTile' to AttackInfo.moveToTile.
+            </summary>
+            <param name="pAttacks">The valid 'enemy' attacks.</param>
+            <param name="pTile">The tile being moved to.</param>
+            <returns>true if any attack in the pAttacks list is able to move to the tile pTile, otherwise false.</returns>
+        </member>
+        <member name="T:ChessEngine.AttackInfo">
+            <summary>
+            Holds information about an attack.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.AttackInfo.moveToTile">
+            <summary>The ChessTableTile the attacker is moving to.</summary>
+        </member>
+        <member name="F:ChessEngine.AttackInfo.attackTile">
+            <summary>The ChessTableTile being attacked.</summary>
+        </member>
+        <member name="T:ChessEngine.MoveData">
+            <summary>Move data contains simply the 'from' tile index, the 'to' tile index, and a readonly boolean 'isAttack' that tracks whether the move is an attack or just a move.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveData.isCapture">
+            <summary>Returns true if the move is a capture, otherwise false.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveData.captureTileIndex">
+            <summary>Only relevant if 'isCapture' is true. Returns the tile index of the piece being captured.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveData.fromTileIndex">
+            <summary>The tile index the move is from.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveData.toTileIndex">
+            <summary>The tile index the move is to.</summary>
+        </member>
+        <member name="M:ChessEngine.MoveData.#ctor">
+            <summary>Constructs a MoveData instance and sets the readonly 'isCapture' field to false.</summary>
+        </member>
+        <member name="M:ChessEngine.MoveData.#ctor(ChessEngine.TileIndex)">
+            <summary>Constructs a MoveData instance and sets the readonly 'isCapture' field to true and stores the 'capture tile index'.</summary>
+            <param name="pCaptureTileIndex"></param>
+        </member>
+        <member name="T:ChessEngine.MoveInfo">
+            <summary>
+            A class containing information about a move.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.MoveInfo.piece">
+            <summary>The chess piece moved in the move.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveInfo.fromTileIndex">
+            <summary>The TileIndex the chess piece moved from.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveInfo.toTileIndex">
+            <summary>The TileIndex the chess piece moved to.</summary>
+        </member>
+        <member name="F:ChessEngine.MoveInfo.capturedPiece">
+            <summary>The ChessPiece that was captured in the move, otherwise null if none was captured</summary>
+        </member>
+        <member name="F:ChessEngine.MoveInfo.capturedTileIndex">
+            <summary>Only valid when capturedPiece is non-null, the tile index the captured piece was taken from. (Exists due to en-passant allowing take without ending up on attacked tile.)</summary>
+        </member>
+        <member name="T:ChessEngine.RookReferences">
+            <summary>
+            A class containing references to Rook pieces based on what color and side they are on.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.RookReferences.whiteKingSideRook">
+            <summary>The Rook on the King side of the white team.</summary>
+        </member>
+        <member name="F:ChessEngine.RookReferences.whiteQueenSideRook">
+            <summary>The Rook on the Queen side of the white team.</summary>
+        </member>
+        <member name="F:ChessEngine.RookReferences.blackKingSideRook">
+            <summary>The Rook on the King side of the black team.</summary>
+        </member>
+        <member name="F:ChessEngine.RookReferences.blackQueenSideRook">
+            <summary>The Rook on the Queen side of the black team.</summary>
+        </member>
+        <member name="T:ChessEngine.TileIndex">
+            <summary>
+            A TileIndex represents the index of a ChessTableTile along an 8x8 grid.
+            Note that x == 0, y == 0, represents the lower-left origin of the chess table.
+            </summary>
+            Author: Intuitive Gaming SOlutions
+        </member>
+        <member name="M:ChessEngine.TileIndex.GetTileID">
+            <summary>Gets the 'column' 'rank' identifier of the tile. (e.g: a1, e4, etc)</summary>
+            <returns>a string representing the tile in classic 'column rank' idenfication.</returns>
+        </member>
+        <member name="M:ChessEngine.TileIndex.Equals(ChessEngine.TileIndex)">
+            <summary>
+            Returns true if the TileIndexes match in both the x and y field, otherwise false.
+            </summary>
+            <param name="pTileIndex">The tile index to compare against.</param>
+            <returns>true if the TileIndexes match in both the x and y field, otherwise false.</returns>
+        </member>
+        <member name="T:ChessEngine.Delegates.ActionRef`1">
+            <summary>
+            A simple delegate for events where an argument is passed by reference.
+            </summary>
+            <typeparam name="T"></typeparam>
+            <param name="pItem"></param>
+        </member>
+        <member name="T:ChessEngine.Delegates.ValueActionRef`2">
+            <summary>
+            A simple delegate for events where the first argument is a reference to some type and the second argument is passed by reference.
+            </summary>
+            <typeparam name="VAL_T">The type of the non-reference parameter.</typeparam>
+            <typeparam name="REF_T">The type of the reference parameter.</typeparam>
+            <param name="pValue">The non-reference value argument.</param>
+            <param name="pItem">The reference.</param>
+        </member>
+        <member name="T:ChessEngine.Delegates.ValueActionRef`3">
+            <summary>
+            A simple delegate for events where the first 2 arguments are a reference to some type and the last argument is passed by reference.
+            </summary>
+            <typeparam name="VAL_T">The type of the first non-reference parameter.</typeparam>
+            <typeparam name="VAL_T2">The type of the second non-reference parameter.</typeparam>
+            <typeparam name="REF_T">The type of the reference parameter.</typeparam>
+            <param name="pValue">The first non-reference value argument.</param>
+            <param name="pValue2">The second non-reference value argument.</param>
+            <param name="pItem">The reference.</param>
+        </member>
+        <member name="T:ChessEngine.Delegates.ValueActionRef`4">
+            <summary>
+            A simple delegate for events where the first 3 arguments are a reference to some type and the last argument is passed by reference.
+            </summary>
+            <typeparam name="VAL_T">The type of the first non-reference parameter.</typeparam>
+            <typeparam name="VAL_T2">The type of the second non-reference parameter.</typeparam>
+            <typeparam name="VAL_T3">The type of the third non-reference parameter.</typeparam>
+            <typeparam name="REF_T">The type of the reference parameter.</typeparam>
+            <param name="pValue">The first non-reference value argument.</param>
+            <param name="pValue2">The second non-reference value argument.</param>
+            <param name="pValue3">The third non-reference value argument.</param>
+            <param name="pItem">The reference.</param>
+        </member>
+        <member name="T:ChessEngine.Delegates.ValueActionRef`5">
+            <summary>
+            A simple delegate for events where the first 4 arguments are a reference to some type and the last argument is passed by reference.
+            </summary>
+            <typeparam name="VAL_T">The type of the first non-reference parameter.</typeparam>
+            <typeparam name="VAL_T2">The type of the second non-reference parameter.</typeparam>
+            <typeparam name="VAL_T3">The type of the third non-reference parameter.</typeparam>
+            <typeparam name="VAL_T4">The type of the fourth non-reference parameter.</typeparam>
+            <typeparam name="REF_T">The type of the reference parameter.</typeparam>
+            <param name="pValue">The first non-reference value argument.</param>
+            <param name="pValue2">The second non-reference value argument.</param>
+            <param name="pValue3">The third non-reference value argument.</param>
+            <param name="pValue4">The fourth non-reference value argument.</param>
+            <param name="pItem">The reference.</param>
+        </member>
+        <member name="T:ChessEngine.ChessPieceType">
+            <summary>An enumerate that contains all valid chess piece types.</summary>
+        </member>
+        <member name="T:ChessEngine.GameOverReason">
+            <summary>The reason the game ended.</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.NotOver">
+            <summary>The game is not over.</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.Won">
+            <summary>The game is over due to a victory.</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.Draw">
+            <summary>The game is over due to a draw.</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.TimeExpired">
+            <summary>The game is over due to an expired timer.</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.Forfeit">
+            <summary>The game is over due to a forfeit. (flipped 'won')</summary>
+        </member>
+        <member name="F:ChessEngine.GameOverReason.Unknown">
+            <summary>The game is over due to some custom unlisted reason.</summary>
+        </member>
+        <member name="T:ChessEngine.Instance">
+            <summary>
+            An instance of a chess engine.
+            The core class that operates the chess engine.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.Instance.Initialized">
+            <summary>An event that is invoked whenever a new Instance is constructed. This is even invoked on instances constructed from serialized instances.</summary>
+        </member>
+        <member name="F:ChessEngine.Instance.Deinitialized">
+            <summary>An even that is invoked just before an Instance is destructed.</summary>
+        </member>
+        <member name="F:ChessEngine.Instance.turn">
+            <summary>The current turn.</summary>
+        </member>
+        <member name="P:ChessEngine.Instance.Table">
+            <summary>The ChessTable for this instance.</summary>
+        </member>
+        <member name="P:ChessEngine.Instance.FullMoveCounter">
+            <summary>The number of full moves this game. Incremented after black's move.</summary>
+        </member>
+        <member name="P:ChessEngine.Instance.HalfMovesClock">
+            <summary>The number of half moves since the last  capture or pawn advance.</summary>
+        </member>
+        <member name="P:ChessEngine.Instance.LastMove">
+            <summary>The MoveInfo from the last move or null if no moves have been made yet.</summary>
+        </member>
+        <member name="P:ChessEngine.Instance.EnPassantEligible">
+            <summary>A reference to a Pawn eligible for en passant, or null.</summary>
+        </member>
+        <member name="E:ChessEngine.Instance.PreDestructed">
+            <summary>Invoked before the instance is destructed.</summary>
+        </member>
+        <member name="E:ChessEngine.Instance.TurnEnded">
+            <summary>
+            An event that is invoked when a turn is ended.
+            Arg0: ChessColor - The color whose turn was ended.
+            Arg1: MoveInfo - The MoveInfo from the turn that was ended.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.TurnStarted">
+            <summary>
+            An event that is invoked when a turn is started.
+            Arg0: ChessColor - The team whose turn was started.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.GameOver">
+            <summary>
+            An event that is invoked when the game is finished.
+            Arg0: ChessColor - The color whose turn it was when the game ended.
+            Arg1: GameOverReason - The reason the game ended.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.PreGameReset">
+            <summary>An event that is invoked before the ChessGameManager is reset.</summary>
+        </member>
+        <member name="E:ChessEngine.Instance.PostGameReset">
+            <summary>An event that is invoked after the ChessGamemManager is reset.</summary>
+        </member>
+        <member name="E:ChessEngine.Instance.ChessPieceMoved">
+            <summary>
+            An event that is invoked when a chess piece that belongs to this Instance is moved using ChessPiece.Move(...)
+            
+            EXCEPTION: This is not invoked when a rook is moved due to castling since it is not a 'move' for the rook, it is the kings move.
+            
+            Arg0: MoveInfo - Information about the move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.PreChessPieceMoved">
+            <summary>
+            An event that is invoked just before a chess piece that belongs to this Instance is moved using ChessPiece.Move(...)
+            
+            EXCEPTION: This is not invoked when a rook is moved due to castling since it is not a 'move' for the rook, it is the kings move.
+            
+            Arg0: MoveInfo - Information about the upcoming move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.Castled">
+            <summary>
+            Invoked whenever chess pieces perform a castle move in this Instance.
+            
+            NOTE: You can use the last invokation of the 'ChessPieceMoved' event to get the exact move details that led to the castle.
+            
+            Arg0: ChessPiece - The king chess piece involved in the castle.
+            Arg1: ChessPiece - The rook chess piece involved in the castle.
+            Arg2: TileIndex - The TileIndex of the rook before castling.
+            Arg3: TileIndex - The TileIndex of the rook after castling.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.LoadedSerializedInstance">
+            <summary>
+            An event that is invoked whenever a chess instance is loaded using a SerializedChessInstance.
+            Useful for extending serialization behavior.
+            
+            Arg0: SerializedChessInstance - The SerializedChessInstance the Instance was loaded from.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.IsGameOverCallback">
+            <summary>
+            Invoked during an 'IsGameOver' check to allow the game over state to be overridden using the event callback.
+            Used to add additional 'Game Over' conditions.
+            NOTE: To completely replace 'Game Over' conditions override the 'ChessEngine.Instance' class and override the 'IsGameOver' virtual method.
+            
+            Arg0: Instance - The chess Instance involved in the event.
+            Arg1: ref bool - A reference to a boolean value that will flip the game to a 'Unknown' game over reason state if it becomes true.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Instance.QueeningPawnCallback">
+             <summary>
+             Invoked just before a pawn is queened.
+             Used to add custom 'queening' behaviour or to remove it completely.
+             NOTE: To completely replace 'queening' behaviour set the reference 'bool' to true signalling the behaviour has been overridden -- alternatively leaving the bool false (or not setting it) will allow you to expand on existing behaviour. 
+            
+             Arg0: Pawn - The pawn that is being queened.
+             Arg1: TileIndex - The old tile index of the pawn before moving to the queening tile.
+             Arg2: bool - A boolean value that represents whether or not the tile that was moved to was empty or not. If true the tile was empty, if false it was not.
+             Arg3: ref bool - A reference to a boolean value that when true signals the queening behaviour has been overridden, otherwise when false (default) the default behaviour still executes.
+             </summary>
+        </member>
+        <member name="F:ChessEngine.Instance.m_EnPassantSet">
+            <summary>Tracks whether en passant eligibility has been set or not.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.#ctor">
+            <summary>Invoked when the chess engine Instance is constructed.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.#ctor(System.String)">
+            <summary>
+            Instantiates an Instance of the chess engine using the FEN string as the initial state.
+            
+            WARNING: When creating an instance from a FEN string many things may not perfectly match the previous game as some information is not included in the FEN string. This includes:
+                1. The 'MoveCount' of pieces is not accurate.
+                2. Pawns that are not on their starting column will have their move count automatically incremented by 1.
+                3. Kings and Rooks may have their move count incremented to create conditions that match the 'castle string' from the FEN string.
+                4. If a castle is possible we can guarentee the relevant Rook is in the initial position and can accurately set it to king or queenside.
+                5. When a castle is not possible on both sides:
+                    - The initial spawn locations will be checked for Rooks... if found they will be set to their relevant appropriate side.
+                    - If no Rook found in both spawn positions the sides of the Rooks will be chosen at random.
+            </summary>
+            <param name="pFEN"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.#ctor(ChessEngine.Instance)">
+            <summary>Creates a unique copy of a chess instance.</summary>
+            <param name="pOther"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.Finalize">
+            <summary>Invoked when the chess engine Instance is destructed.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.#ctor(ChessEngine.Serialization.SerializedChessInstance)">
+            <summary>
+            Constructs a new chess instance cloning the state of the provided pSerializedInstance.
+            NOTE: The 'LastMove' property will not be loaded as it is not serialized due to difficulties in tracking 'capturedPiece' and 'piece' references since they may already be off the board or moved.
+            </summary>
+            <param name="pSerializedInstance"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.SetState(ChessEngine.Serialization.SerializedChessInstance)">
+            <summary>Sets the state of the chess instance using the information from pSerializedInstance without having to construct a new checkers Instance.</summary>
+            <param name="pSerializedInstance"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.ResetGame">
+            <summary>Resets the chess game starting a new game. Note that this method does not start the game, use StartTurn() to start the first turn.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.StartTurn">
+            <summary>Invokes the 'OnTurnStarted' callback. Useful to start an already set game without resetting it.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.EndTurn(ChessEngine.MoveInfo)">
+            <summary>Ends a turn and runs win detection.</summary>
+            <param name="pMove">The move from the ending turn.</param>
+        </member>
+        <member name="M:ChessEngine.Instance.EndGame(ChessEngine.ChessColor,ChessEngine.GameOverReason)">
+            <summary>Ends the chess game with the given reason on the specified team's turn.</summary>
+            <param name="pEndOnTurn"></param>
+            <param name="pGameOverReason"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.QueenPawn(ChessEngine.Pawn,ChessEngine.TileIndex,System.Boolean)">
+            <summary>Queens a pawn while invoking relevant event(s) to provide an opportunity to override the behaviour.</summary>
+            <param name="pPiece">The Pawn being queened.</param>
+            <param name="pOldTileIndex">The tile index of the pawn before moving to the queening tile.</param>
+            <param name="pWasTileEmpty">True if the tile the pawn moved to was empty, otherwise false.</param>
+        </member>
+        <member name="M:ChessEngine.Instance.IsGameOver(ChessEngine.MoveInfo)">
+            <summary>
+            IsGameOver may be called to checks for game over events, returns GameOverReason on game over otherwise GameOverReason.NotOver if the game is not over.
+            </summary>
+            <param name="pMove"></param>
+            <returns>GameOverReason if the game is over, otherwise GameOverReason.NotOver if game is not over.</returns>
+        </member>
+        <member name="M:ChessEngine.Instance.OnGameOver(ChessEngine.ChessColor,ChessEngine.GameOverReason)">
+            <summary>
+            Called when the game ends, the winner is whoever's turn it currently is.
+            </summary>
+            <param name="pTeam">The ChessColor of the team whose turn it was when the game ended.</param>
+            <param name="pReason">The GameOverReason for the game ending.</param>
+        </member>
+        <member name="M:ChessEngine.Instance.OnTurnStarted(ChessEngine.ChessColor)">
+            <summary>
+            Invoked when a turn is started.
+            </summary>
+            <param name="pTurn">The color whose turn was started.</param>
+        </member>
+        <member name="M:ChessEngine.Instance.OnTurnEnded(ChessEngine.ChessColor,ChessEngine.MoveInfo)">
+            <summary>
+            Invoked when a turn is ended.
+            </summary>
+            <param name="pLastTurn">The ChessColor whose turn ended.</param>
+            <param name="pMove">The move the turn ended on.</param>
+        </member>
+        <member name="M:ChessEngine.Instance.Protected_Initialize">
+            <summary>A private method that should be called at the start of all Instance constructors.</summary>
+        </member>
+        <member name="M:ChessEngine.Instance.GenerateFENEnPassantString">
+            <summary>Generates the en passant portion of a FEN string based on the current table layout and returns it.</summary>
+            <returns>The en passant  portion of a FEN string based on the current table layout.</returns>
+        </member>
+        <member name="M:ChessEngine.Instance.GenerateFENCastleStringForRook(ChessEngine.Rook)">
+            <summary>
+            Generates the FEN castle string character for a specific Rook.
+            If pRook is null an empty string will be returned.
+            
+            NOTE: This does not take into consideration whether or not the King has moved.
+            </summary>
+            <param name="pRook"></param>
+            <returns>The FEN castle character for the Rook.</returns>
+        </member>
+        <member name="M:ChessEngine.Instance.GenerateFENCastleString">
+            <summary>
+            Generates the castle portion of a FEN string based on the current table layout and returns it.
+            Tracks whether the relevant rooks and kings have moved, not whether they can actually castle.
+            
+            FORMAT:
+            KQkq
+            1234
+            1. Can white King side Rook castle? K if yes, otherwise -
+            2. Can white Queen side Rook castle? Q if yes, otherwise -
+            3. Can black King side Rook castle? k if yes, otherwise -
+            4. Can black Queen side Rook castle? q if yes, otherwise -
+            </summary>
+            <returns>The castle portion of a FEN string based on the current table layout.</returns>
+        </member>
+        <member name="M:ChessEngine.Instance.GenerateFENString">
+            <summary>Generates a FEN string based on the current table layout and returns it.</summary>
+            <returns>A FEN string based on the current table layout.</returns>
+        </member>
+        <member name="M:ChessEngine.Instance.SetStateToFEN(System.String)">
+            <summary>Set the state of the chess instance using a FEN string.</summary>
+            <param name="pFEN"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.Internal_OnPreChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked just before a chess piece is moved (except for a Rook who has moved due to castling).</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.Internal_OnChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked whenever a chess piece is moved (except for a Rook who has moved due to castling).</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.Instance.Internal_OnCastle(ChessEngine.ChessPiece,ChessEngine.ChessPiece,ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked just after a king castles with a rook.</summary>
+            <param name="pKing"></param>
+            <param name="pRook"></param>
+            <param name="pPreCastleRookTile"></param>
+            <param name="pPostCastleRookTile"></param>
+        </member>
+        <member name="T:ChessEngine.Bishop">
+            <summary>
+            Implementation of a Chess Bishop.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:ChessEngine.Bishop.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Bishop.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Bishop.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Bishop.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="T:ChessEngine.King">
+            <summary>
+            Implementation of a Chess King.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.King.Castled">
+            <summary>
+            An event that is invoked whenever the King castles with a rook.
+            
+            Arg0: ChessPiece - A reference to the Rook that castled with this King.
+            Arg1: TileIndex - The original tile index for the Rook before castling.
+            Arg2: TileIndex - The new tile index for the Rook after castling.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.King.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.King.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.King.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.King.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="M:ChessEngine.King.OnCastled(ChessEngine.ChessPiece,ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>
+            Invoked after this King castles with a Rook.
+            Note that the kings move information can be obtained from the last invokation of the 'ChessPieceMoved' event.
+            </summary>
+            <param name="pRook">A reference to the rook ChessPiece that the King castled with.</param>
+            <param name="pPreCastleTile">The TileIndex the rook was on before castling.</param>
+            <param name="pPostCastleTile">The TileIndex the rook is on after castling.</param>
+        </member>
+        <member name="T:ChessEngine.Knight">
+            <summary>
+            Implementation of a Chess Knight.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:ChessEngine.Knight.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Knight.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Knight.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Knight.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="T:ChessEngine.Pawn">
+            <summary>
+            Implementation of a Chess Pawn.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.Pawn.enPassanting">
+            <summary>Reference to a pawn that is currently being taken en passant by this pawn or null.</summary>
+        </member>
+        <member name="F:ChessEngine.Pawn.SPAWN_ROW_INDEX_WHITE">
+            <summary>The index of the row white pawns spawn in.</summary>
+        </member>
+        <member name="F:ChessEngine.Pawn.SPAWN_ROW_INDEX_BLACK">
+            <summary>The index of the row black pawns spawn in.</summary>
+        </member>
+        <member name="M:ChessEngine.Pawn.IsOnStartingRow">
+            <summary>Returns true if the Pawn is on its starting row, otherwise false.</summary>
+            <returns>true if the Pawn is on its starting row, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.Pawn.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Pawn.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Pawn.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Pawn.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="M:ChessEngine.Pawn.OnPreMoved(ChessEngine.MoveInfo@)">
+            <summary>Invoked just before the Pawn is moved using the 'Move(...)' method.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.Pawn.OnPostMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked just after the pawn is moved using the Move(...) method.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="T:ChessEngine.Queen">
+            <summary>
+            Implementation of a Chess Queen.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:ChessEngine.Queen.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Queen.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Queen.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Queen.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="T:ChessEngine.Rook">
+            <summary>
+            Implementation of a Chess Rook.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.Rook.Castled">
+            <summary>
+            An event that is invoked whenever the rook castles with a king.
+            
+            Arg0: ChessPiece - A reference to the King that castled with this Rook.
+            Arg1: TileIndex - The original tile index for the Rook before castling.
+            Arg2: TileIndex - The new tile index for the Rook after castling.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.Rook.IsKingSide">
+            <summary>Returns true if this is the king side Rook, otherwise false if it is the Queen side Rook.</summary>
+        </member>
+        <member name="F:ChessEngine.Rook.ROOK_SPAWN_KINGSIDE_TILEINDEX_WHITE">
+            <summary>The TileIndex the white kingside Rook spawns in when a new game is started.</summary>
+        </member>
+        <member name="F:ChessEngine.Rook.ROOK_SPAWN_QUEENSIDE_TILEINDEX_WHITE">
+            <summary>The TileIndex the white queenside Rook spawns in when a new game is started.</summary>
+        </member>
+        <member name="F:ChessEngine.Rook.ROOK_SPAWN_KINGSIDE_TILEINDEX_BLACK">
+            <summary>The TileIndex the black kingside Rook spawns in when a new game is started.</summary>
+        </member>
+        <member name="F:ChessEngine.Rook.ROOK_SPAWN_QUEENSIDE_TILEINDEX_BLACK">
+            <summary>The TileIndex the black queenside Rook spawns in when a new game is started.</summary>
+        </member>
+        <member name="M:ChessEngine.Rook.GenerateMovesList">
+            <summary>
+            Returns a list with the ChessTableTiles of all possible moves for this piece.
+            </summary>
+            <returns>A list of ChessTableTiles for all possible moves of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Rook.GenerateAttacksList(ChessEngine.ChessTableTile,ChessEngine.ChessTableTile)">
+            <summary>
+            Returns a list with the AttackInfos of all possible attacks for this piece.
+            </summary>
+            <returns>A list of AttackInfos for all possible attacks of this piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Rook.GetFENIdentifier">
+            <summary>
+            Returns the FEN identifier for the chess piece.
+            
+            White Piece | Black Piece | Chess Piece
+            P           |     p       | Pawn
+            N           |     n       | Knight
+            B           |     b       | Bishop
+            R           |     r       | Rook
+            Q           |     q       | Queen
+            K           |     k       | King
+            </summary>
+            <returns>a string representing the FEN identifier for the chess piece.</returns>
+        </member>
+        <member name="M:ChessEngine.Rook.GetChessPieceType">
+            <summary>Returns the ChessPieceType for this ChessPiece.</summary>
+            <returns>the ChessPieceType for this ChessPiece.</returns>
+        </member>
+        <member name="M:ChessEngine.Rook.OnCastled(ChessEngine.ChessPiece,ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>
+            Invoked after this King castles with a Rook.
+            Note that the kings move information can be obtained from the last invokation of the 'ChessPieceMoved' event.
+            </summary>
+            <param name="pKing">A reference to the king ChessPiece that the King castled with.</param>
+            <param name="pPreCastleTile">The TileIndex the rook was on before castling.</param>
+            <param name="pPostCastleTile">The TileIndex the rook is on after castling.</param>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedPawn">
+            <summary>
+            Derived from SerializedPawn this class represents a serialized Pawn piece.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedPawn.IsEnPassanting">
+            <summary>Tracks whether or not the serialized pawn's 'enPassant' field is valid or null. (true of valid, otherwise null.)</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedPawn.EnPassantingTile">
+            <summary>Tracks the tile of the 'enPassanting' pawn reference for a serialized pawn.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedPawn.#ctor">
+            <summary>Instantaites a blank SerializablePawn.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedPawn.#ctor(ChessEngine.Pawn)">
+            <summary>Instantiates a SerializablePawn from a Pawn.</summary>
+            <param name="pPawn"></param>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedRook">
+            <summary>
+            Derived from SerializedRook this class represents a serialized Rook piece.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedRook.IsKingSide">
+            <summary>Tracks whether or not the serialized rook is the kingside rook or not. (true for kingside, otherwise false.)</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedRook.#ctor">
+            <summary>Instantaites a blank SerializableRook.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedRook.#ctor(ChessEngine.Rook)">
+            <summary>Instantiates a SerializableRook from a Rook.</summary>
+            <param name="pRook"></param>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedChessInstance">
+            <summary>
+            A serializable class that provides a complete representation of a chess Instance.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.Turn">
+            <summary>The turn the serialized chess instance is on.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.SerializedTable">
+            <summary>The serialized chess table representation for this serialized chess instance.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.FullMoveCounter">
+            <summary>The number of full moves this game.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.HalfMovesClock">
+            <summary>The number of half moves this game.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.IsEnPassantEligible">
+            <summary>Returns true if there is a valid en-passant eligible Pawn in the instance, otherwise false. </summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.EnPassantEligibleTile">
+            <summary>Only valid when 'IsEnPassantEligible' is true. The TileIndex of the pawn that is eligible to be taken en-passant.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessInstance.IsEnPassantSet">
+            <summary>Tracks whether or not 'en passant' eligiblity was set in a given turn for the chess instance. (NOTE: This is the serialized version of a private boolean inside of Instance.)</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessInstance.#ctor">
+            <summary>Mandatory argument-less constructor.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessInstance.#ctor(ChessEngine.Instance)">
+            <summary>Constructs a serializable representation of the chess instance, pInstance.</summary>
+            <param name="pInstance"></param>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessPiece.Color">
+            <summary>Returns the ChessColor team/color that this SerializableChessPiece belongs to.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessPiece.IsCaptured">
+            <summary>Returns true if this serializable piece has been captured, otherwise false.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessPiece.MoveCount">
+            <summary>The number of moves this serializable Chess piece has made.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessPiece.PieceType">
+            <summary>The ChessPieceType of the serialized piece.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessPiece.TileIndex">
+            <summary>Represents the table tile index this serializable chess piece is on.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessPiece.#ctor">
+            <summary>Instantaites a blank SerializableChessPiece.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessPiece.#ctor(ChessEngine.ChessPiece)">
+            <summary>Instantiates a SerializableChessPiece from a ChessPiece.</summary>
+            <param name="pPiece"></param>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedChessTable">
+            <summary>
+            A serializable class that provides a complete representation of a Chess board.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessTable.SerializedPieceCount">
+            <summary>The size of the 'SerializedPieces' list.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedChessTable.SerializedPieces">
+            <summary>An array of all serializable Chess piece on the serializable Chess table.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessTable.#ctor">
+            <summary>Mandatory argument-less constructor.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedChessTable.#ctor(ChessEngine.ChessTable)">
+            <summary>Constructs a serialized representation of the ChessTable, pTable.</summary>
+            <param name="pTable"></param>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedMoveInfo">
+            <summary>
+            A serializable class that provides a complete representation of a MoveInfo instance.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedMoveInfo.IsCapture">
+            <summary>A boolean that tracks whether or not the move info represents an attack. True if attack, otherwise false.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedMoveInfo.CapturedTileIndex">
+            <summary>The TileIndex of the tile being captured. This is only valid when 'IsCapture' is true.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedMoveInfo.ToTileIndex">
+            <summary>The TileIndex being moved to.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedMoveInfo.FromTileIndex">
+            <summary>The TileIndex being moved from.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedMoveInfo.#ctor">
+            <summary>Mandatory argument-less constructor.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedMoveInfo.#ctor(ChessEngine.MoveInfo)">
+            <summary>Constructs a serialized representation of the MoveInfo, pMoveInfo.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedMoveInfo.ToMoveInfo(ChessEngine.ChessTable)">
+            <summary>
+            Converts the SerializedMoveInfo into MoveInfo for the chess table, pTable and returns it.
+            NOTE: This is only able to generate moves before they are performed, otherwise the 'piece' and 'capturedPiece' references may not be possible to find.
+            </summary>
+            <param name="pTable"></param>
+            <returns>a MoveInfo object that describes the serialized move on the chess table, pTable.</returns>
+        </member>
+        <member name="T:ChessEngine.Serialization.SerializedInstanceHistory">
+            <summary>
+            A serializable class that provides a complete representation of the moves and undone moves stacks for an InstanceHistory object.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedInstanceHistory.TrackHistory">
+            <summary>Should this class instance track history? If true history is tracked, otherwise not tracked.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedInstanceHistory.MoveHistoryCount">
+            <summary>The number of entries in the move history stack.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedInstanceHistory.MoveHistory">
+            <summary>A array of all HistoryEntrys from the 'moves' stack.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedInstanceHistory.UndoneMovesCount">
+            <summary>The number of entries in the undone move history stack.</summary>
+        </member>
+        <member name="P:ChessEngine.Serialization.SerializedInstanceHistory.UndoneMoves">
+            <summary>A array of all HistoryEntrys from the 'undone moves' stack.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedInstanceHistory.#ctor">
+            <summary>Mandatory argument-less constructor.</summary>
+        </member>
+        <member name="M:ChessEngine.Serialization.SerializedInstanceHistory.#ctor(ChessEngine.Undo.InstanceHistory)">
+            <summary>Constructs a serializable representation of the instance history object, pHistory.</summary>
+            <param name="pHistory"></param>
+        </member>
+        <member name="T:ChessEngine.Undo.HistoryEntry">
+            <summary>
+            A class that contains data about a move so it can be undone or redone.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="F:ChessEngine.Undo.HistoryEntry.preMoveState">
+            <summary>The state for the game instance before the move.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.HistoryEntry.postMoveState">
+            <summary>The state for the game instance after the move.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.HistoryEntry.fromTileIndex">
+            <summary>The TileIndex the chess piece moved from.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.HistoryEntry.toTileIndex">
+            <summary>The TileIndex the chess piece moved to.</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.HistoryEntry.#ctor">
+            <summary>Default constructor.</summary>
+        </member>
+        <member name="T:ChessEngine.Undo.InstanceHistory">
+            <summary>
+            A class that tracks moves in a chess engine Instance and allows for undoing and redoing of moves.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.InstanceSet">
+            <summary>
+            Invoked whenever the 'Instance' property of this component is set to any value (including a null value).
+            Arg0: Instance - the chess engine Instance that is now being referenced by the instance history tracker or null.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.InstanceUnset">
+            <summary>
+            Invoked whenever the 'Instance' property of this component is unset from some non-null value to anything.
+            Arg0: Instance - the chess engine Instance that was being referenced by the instance history tracker.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.PreMoveUndone">
+            <summary>
+            Invoked just before a move is undone by this InstanceHistory instance just after it is 'popped' from the moves stack.
+            Arg0: Instance - The InstanceHistory object that is about to the move.
+            Arg1: HistoryEntry - The HistoryEntry containing information about the undone move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.MoveUndone">
+            <summary>
+            Invoked after a move is undone by this InstanceHistory instance.
+            Arg0: Instance - The InstanceHistory object that undid the move.
+            Arg1: HistoryEntry - The HistoryEntry containing information about the undone move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.PreMoveRedone">
+            <summary>
+            Invoked just before a move is redone by this InstanceHistory instance just after it is 'popped' from the undone moves stack.
+            Arg0: Instance - The InstanceHistory object that is about to redo the move.
+            Arg1: HistoryEntry - The HistoryEntry containing information about the redone move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.MoveRedone">
+            <summary>
+            Invoked after a move is redone by this InstanceHistory instance.
+            Arg0: Instance - The InstanceHistory object that redid the move.
+            Arg1: HistoryEntry - The HistoryEntry containing information about the redone move.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.MoveHistoryEmptied">
+            <summary>
+            Invoked whenever the move history stack becomes empty.
+            Arg0: Instance - the chess engine Instance that move history is being tracked for.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.MoveHistoryValid">
+            <summary>
+            Invoked whenever the move history stack goes from empty to non-empty.
+            Arg0: Instance - the chess engine Instance that move history is being tracked for.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.UndoHistoryEmptied">
+            <summary>
+            Invoked whenever the undo history stack becomes empty.
+            Arg0: Instance - the chess engine Instance that undo history is being tracked for.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.Undo.InstanceHistory.UndoHistoryValid">
+            <summary>
+            Invoked whenever the undo history stack goes from empty to non-empty.
+            Arg0: Instance - the chess engine Instance that undo history is being tracked for.
+            </summary>
+        </member>
+        <member name="P:ChessEngine.Undo.InstanceHistory.Instance">
+            <summary>A reference to the 'Instance' of the chess engine this component is tracking history for, otherwise null.</summary>
+        </member>
+        <member name="P:ChessEngine.Undo.InstanceHistory.MoveHistoryCount">
+            <summary>Returns the number of HistoryEntrys there are in the 'move history' array.</summary>
+        </member>
+        <member name="P:ChessEngine.Undo.InstanceHistory.TrackHistory">
+            <summary>Should this class instance track history? If true history is tracked, otherwise not tracked.</summary>
+        </member>
+        <member name="P:ChessEngine.Undo.InstanceHistory.UndoneMovesCount">
+            <summary>Returns the number of HisoryEntrys there are in the 'undone moves' array.</summary>
+        </member>
+        <member name="P:ChessEngine.Undo.InstanceHistory.TrackUndoneMoves">
+            <summary>Should this class instance track undone moves for 'redo' functionality? If true undone moves are tracked, otherwise not tracked.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.InstanceHistory.m_SkipNextMove">
+            <summary>A boolean that tracks whether or not the next move should be skipped and not added to history.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.InstanceHistory.m_PreMoveState">
+            <summary>The game state before the last move.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.InstanceHistory.m_MoveHistory">
+            <summary>A Stack that tracks all MoveInfos that have occured in the relevant chess engine Instance.</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.InstanceHistory.m_UndoneMoves">
+            <summary>A Stack that tracks all of the undone moves that have occured in the relevant</summary>
+        </member>
+        <member name="F:ChessEngine.Undo.InstanceHistory.m_Instance">
+            <summary>The hidden backing field for the 'Instance' property.</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.#ctor">
+            <summary>Constructs an InstanceHistory instance that is uninitiualized (no 'Instance' reference set).</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.#ctor(ChessEngine.Instance)">
+            <summary>Constructs an InstanceHistory instance that tracks history for the specified chess engine Instance, pInstance.</summary>
+            <param name="pInstance"></param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.ClearHistory">
+            <summary>Clears all tracked instance history.</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.ClearUndoneMoves">
+            <summary>Clears all the tracked instance undone move history.</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.PeekMove">
+            <summary>Returns the HistoryEntry at the top of the move history stack.</summary>
+            <returns>the HistoryEntry at the top of the move history s tack.</returns>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.GetMoveHistoryArray">
+            <summary>Returns a copy of the move history stack as an array.</summary>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.UndoMove">
+            <summary>Pops the top-most MoveInfo from the move history stack and returns it.</summary>
+            <returns>the MoveInfo at the start of the move history stack.</returns>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.PeekUndoneMove">
+            <summary>Returns a reference to the HistoryEntry at the top of the undone moves stack.</summary>
+            <returns>A reference to the HistoryEntry a the top of the undone moves stack.</returns>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.GetUndoneMovesArray">
+            <summary>Returns a copy of the 'undone moves' stack as an array.</summary>
+            <returns>an array that is a copy of the 'undone moves' stack.</returns>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.RedoMove">
+            <summary>Redoes the last undid move.</summary>
+            <returns>HistoryEntry for the move that was redone.</returns>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.PushMoveHistory(ChessEngine.MoveInfo)">
+            <summary>Pushes a MoveInfo, pMove, to the top of the move history stack.</summary>
+            <param name="pMove"></param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.OnInstanceSet(ChessEngine.Instance)">
+            <summary>Invoked whenever the 'Instance' property of this InstanceHistory instance is set to any value (including a null one).</summary>
+            <param name="pInstance"></param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.OnInstanceUnset(ChessEngine.Instance)">
+            <summary>Invoked whenever the 'Instance' property of this InstanceHistory object is changed from some non-null value to anything else.</summary>
+            <param name="pInstance"></param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.OnPreChessPieceMoved(ChessEngine.MoveInfo)">
+            <summary>Invoked just before a chess piece for the relevant chess engine Instance is moved.</summary>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.OnGameOver(ChessEngine.ChessColor,ChessEngine.GameOverReason)">
+            <summary>Invoked when the chess game is over. (Use 'LastMove') to get the game ending move.</summary>
+            <param name="pColor">The color whose turn it was when the game ended.</param>
+            <param name="pReason">The reason the game is over.</param>
+        </member>
+        <member name="M:ChessEngine.Undo.InstanceHistory.OnTurnEnded(ChessEngine.ChessColor,ChessEngine.MoveInfo)">
+            <summary>Invoked after a turn is ended.</summary>
+            <param name="pLastTurn"></param>
+            <param name="pMoveInfo"></param>
+        </member>
+        <member name="T:ChessEngine.TimeSystem.TimeManager">
+            <summary>
+            A class that provides easy-to-use time related methods.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="P:ChessEngine.TimeSystem.TimeManager.IsPaused">
+            <summary>Controls whether or not the TimeManager is paused.</summary>
+        </member>
+        <member name="P:ChessEngine.TimeSystem.TimeManager.ElapsedTime">
+            <summary>Returns the number of seconds that have elapsed since the TimeManager was constructed or unpaused. (Will return the same value at any time while paused.)</summary>
+        </member>
+        <member name="F:ChessEngine.TimeSystem.TimeManager.m_ElapsedTime">
+            <summary>The field that tracks elapsed time for the time manager.</summary>
+        </member>
+        <member name="F:ChessEngine.TimeSystem.TimeManager.m_StartTime">
+            <summary>The DateTime that the TimeManager was constructed or unpaused at.</summary>
+        </member>
+        <member name="F:ChessEngine.TimeSystem.TimeManager.m_IsPaused">
+            <summary>The hidden backing field for the 'IsPaused' property.</summary>
+        </member>
+        <member name="M:ChessEngine.TimeSystem.TimeManager.Pause">
+            <summary>Pauses time.</summary>
+        </member>
+        <member name="M:ChessEngine.TimeSystem.TimeManager.Unpause">
+            <summary>Unpauses time.</summary>
+        </member>
+        <member name="M:ChessEngine.TimeSystem.TimeManager.SetElapsedTime(System.Single)">
+            <summary>A public method that allows the TimeManagers elapsed time to be directly overridden.</summary>
+            <param name="pElapsedTime"></param>
+        </member>
+        <member name="T:ChessEngine.Utility.FENUtility">
+            <summary>
+            A public static class with utility methods that help parse FEN strings.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:ChessEngine.Utility.FENUtility.ParseFEN(System.String,System.String@,System.Char@,System.String@,System.String@,System.Int32@,System.Int32@)">
+            <summary>Parses a FEN string into it's parts. Throws an ArgumentException if the FEN string is malformed.</summary>
+            <param name="pFEN"></param>
+            <param name="pEPD"></param>
+            <param name="pTurn"></param>
+            <param name="pCastle"></param>
+            <param name="pEnPassant"></param>
+            <param name="pHalfMoves"></param>
+            <param name="pFullMoves"></param>
+        </member>
+        <member name="M:ChessEngine.Utility.FENUtility.TryParseFEN(System.String,System.String@,System.Char@,System.String@,System.String@,System.Int32@,System.Int32@)">
+            <summary>Attempts to parse a FEN string into it's parts. Returns true if successful, returns false if the FEN string was malformed..</summary>
+            <param name="pFEN"></param>
+            <param name="pEPD"></param>
+            <param name="pTurn"></param>
+            <param name="pCastle"></param>
+            <param name="pEnPassant"></param>
+            <param name="pHalfMoves"></param>
+            <param name="pFullMoves"></param>
+        </member>
+        <member name="M:ChessEngine.Utility.FENUtility.IsFENStringValid(System.String)">
+            <summary>Returns true if the given FEN string is a valid FEN string, otherwise false.</summary>
+            <param name="pFEN"></param>
+            <returns>true if pFEN is a vlaid FEN string, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.Utility.FENUtility.GetEPDPieceType(System.Char)">
+            <summary>Returns the ChessPieceType that is represented by the EPD character given as pEPDChar, otherwise ChessPieceType.None.</summary>
+            <param name="pEPDChar"></param>
+            <returns>the Type that is represented by the given EPD character, otherwise ChessPieceType.None.</returns>
+        </member>
+        <member name="M:ChessEngine.Utility.FENUtility.GetEPDPieceColor(System.Char)">
+            <summary>Returns the ChessColor for the piece represented by the EPD character given as pEPDChar.</summary>
+            <param name="pEPDChar"></param>
+            <returns>the ChessColor for the piece represented by the given EPD character.</returns>
+        </member>
+        <member name="T:ChessEngine.Utility.InputValidation">
+            <summary>
+            A public static class that validates Chess notation related inputs.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="M:ChessEngine.Utility.InputValidation.IsCharacterValidColumn(System.Char)">
+            <summary>Returns true if the specified character represents a valid column (a through h), otherwise false.</summary>
+            <param name="pCharacter"></param>
+            <returns>true if the specified character represents a valid column (a through h), otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.Utility.InputValidation.IsCharacterValidRank(System.Char)">
+            <summary>Returns true if the specified character represents a valid rank (1 through 8), otherwise false.</summary>
+            <param name="pCharacter"></param>
+            <returns>true if the specified character represents a valid rank (1 through 8), otherwise false.</returns>
+        </member>
+    </members>
+</doc>

@@ -1,0 +1,245 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ChessEngine.AI.Riddle</name>
+    </assembly>
+    <members>
+        <member name="T:ChessEngine.AI.Riddle.RiddleChessAI">
+            <summary>
+            Riddle chess AI.
+            
+            Riddle is a well balanced chess AI that takes as much time as he is allowed to carefully consider each move and it's consequences further in the game.
+            Riddles difficulty scales with allowed think time and allowed think depth.
+            Riddle may think on up to the hardware limit of threads or 'MaxThreads' threads at a time.
+            </summary>
+        </member>
+        <member name="T:ChessEngine.AI.Riddle.RiddleChessAI.ValidMoveEntry">
+            <summary>Holds information about valid moves and attacks that may be made this turn.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.ValidMoveEntry.preMoveState">
+            <summary>The state of the board before the move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.ValidMoveEntry.moveData">
+            <summary>The data for the valid move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.ValidMoveEntry.submoveEntries">
+            <summary>A list of SubMoveEntrys that are overridden every frame while a best move is being considered. This ensures that only the most recent scoring data is considered</summary>
+        </member>
+        <member name="T:ChessEngine.AI.Riddle.RiddleChessAI.ScoredValidMove">
+            <summary>A scored valid move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.ScoredValidMove.score">
+            <summary>The score for the move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.ScoredValidMove.moveData">
+            <summary>The data that describes the move.</summary>
+        </member>
+        <member name="T:ChessEngine.AI.Riddle.RiddleChessAI.SubmoveEntry">
+            <summary>Holds information about submoves at any depth.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.SubmoveEntry.validMoveIndex">
+            <summary>The index of the move that is valid this turn for the AI in the 'valid moves' array.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.SubmoveEntry.cumulativeScore">
+            <summary>The cumulative score from 'valid moves' entry at 'validMoveIndex' to and including this move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.SubmoveEntry.postMoveState">
+            <summary>The state of the board after the move.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.Riddle.RiddleChessAI.IsThinking">
+            <summary>Returns true if the AI is currently thinking about its move, otherwise false if not making a move or finished thinking.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.Riddle.RiddleChessAI.MaxThreads">
+            <summary>The maximum # of threads the AI may use to calculate its next move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.m_LockObject">
+            <summary>The thread synchronization object.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.m_CancellationToken">
+            <summary>The current cancellation token for the main thread.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.m_ValidMoves">
+            <summary>The valid moves for the AI on the current turn.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.m_Threads">
+            <summary>An array of threads used by the AI to calculate and submit moves.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.RiddleChessAI.m_ScoredMoveLookup">
+            <summary>
+            A concurrent queue where threads submit their highest scored moves.
+            Key: int - The thread index.
+            Value: ScoredValidMove - The score of the move and the move data itself.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.#ctor(ChessEngine.ChessColor)">
+            <summary>The constructor for RiddleChessAI.</summary>
+            <param name="pTeam">The team the AI is playing as.</param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.CalculateMoveScore(ChessEngine.Instance,ChessEngine.MoveData,System.Int32,System.Threading.CancellationTokenSource@,System.Int32@,ChessEngine.GameOverReason@)">
+            <summary>Gets the single-move score if the move described by pMoveData if played on the chess engine Instance, pInstance.</summary>
+            <param name="pInstance"></param>
+            <param name="pMoveData"></param>
+            <param name="pMoveDepth">The 'depth' (or how many moves in the future) the move is taking place.</param>
+            <param name="pCancellationToken">A reference to a cancellation token that tracks whether or not move score calculation should be cancelled.</param>
+            <param name="pMoverThreatDepth">A reference to an int that tracks the 'move depth' the mover was threatened at. Value is -1 if never threatened to this point.</param>
+            <param name="pGameOverReason">An output parameter that holds the reason for the game being over due to the move, or 'GameOverReason.NotOver' if the move did not end the game.</param>
+            <returns>The score of the move pMoveData if played in the chess instance pInstance.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnBestMoveRequestUpdate">
+            <summary>
+            Invoked after every 'OnUpdate' in any frame where 'IsBestMovePending == true' and 'IsBestMoveDelayed == false'.
+            Logic to determine best moves should not be executed in this loop as a submission delay causes it to not be executed.
+            It is best practice to submit ready best moves in this callback unless they were demanded, this will prevent any non-demanded submissions while there is a best move submission delay set.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnBestMoveRequested(System.Int32,System.Single)">
+            <summary>Invoked when a best move is requested.</summary>
+            <param name="pMaxDepth"></param>
+            <param name="pMaxTime"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.StopThinking(System.Boolean)">
+            <summary>Forces the AI to stop thinking about a move.</summary>
+            <param name="pWaitForThreads">Should the main thread wait for all worker threads to return? (Wait for best moves to be submitted.)</param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnInitialized">
+            <summary>
+            Invoked when the AI is first initialized by the game.
+            Recommended to subscribe to any relevant events here.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnDeinitialized">
+            <summary>
+            Invoked when the AI is deinitialized by the game.
+            Recommended to unsubscribe to any relevant events here. (Doing so in the destructor is unreliable.)
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnUpdate">
+            <summary>Invoked every frame that the AI is updated.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnBestMoveDemanded">
+            <summary>Invoked after the AI demands a best move be submitted immediately.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.OnBestMoveSubmitted(ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked after the AI submits a best move.</summary>
+            <param name="pFrom"></param>
+            <param name="pTo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.SubmitBestMove">
+            <summary>Determines and submits a 'best move' instantly.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.SubmitBestMove(ChessEngine.MoveData)">
+            <summary>Submits a 'best move' with the given move data.</summary>
+            <param name="pMoveData"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.Thread_ScoreMoves(System.Int32,ChessEngine.MoveData[],ChessEngine.Serialization.SerializedChessInstance,System.Threading.CancellationTokenSource)">
+            <summary>Invoked on a thread. Given an array of moves to score.</summary>
+            <param name="pThreadIndex">The index of the thread.</param>
+            <param name="pMoves"></param>
+            <param name="pPreMoveState"></param>
+            <param name="pCancellationToken"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.IsTileThreatened(System.Collections.Generic.List{ChessEngine.MoveData},ChessEngine.TileIndex)">
+            <summary>
+            Returns true if any attack in the pAttacks list is threatening the tile pTile (if a piece may be captured on said tile), otherwise false.
+            This compares 'pTile' to AttackInfo.attackTile.
+            </summary>
+            <param name="pMoves">The valid 'enemy' move datas.</param>
+            <param name="pTileIndex">The tile index being attacked.</param>
+            <returns>true if any attack in the pMoves list is threatening the tile pTile, otherwise false.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.RiddleChessAI.IsTileAttackable(System.Collections.Generic.List{ChessEngine.MoveData},ChessEngine.TileIndex)">
+            <summary>
+            Returns true if any attack in the pMoves list is able to move to the tile pTile, otherwise false.
+            This compares 'pTile' to pMoves.moveToTile.
+            </summary>
+            <param name="pMoves">The valid 'enemy' move datas.</param>
+            <param name="pTileIndex">The tile index being moved to.</param>
+            <returns>true if any attack in the pMoves list is able to move to the tile pTileIndex, otherwise false.</returns>
+        </member>
+        <member name="T:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation">
+            <summary>
+            A public static class that contains values for different chess moves and pieces.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveEvaluated">
+            <summary>
+            An event that is invoked just after the chess AI finishing evaluating a move.
+            Moves being made by 'AI' are considered friendly moves and are generally scored with a positive value.
+            Moves being made by opponents are considered unfriendly moves and are generally scored with a negative value.
+            
+            Arg0: RiddleChessAI - The instance of the chess AI that is evaluating the move.
+            Arg1: MoveType - A value that tracks whether the move was made by a king or not. If true the move was made by a king, if false it was made by a normal pawn piece.
+            Arg2: bool - A value that tracks whether the move was made by the 'AI', if it was a friendly move, or not. If true the move was made by the AI and is considered friendly, otherwise if false it is made by the opponent and considered unfriendly.
+            Arg3: int - The move depth the move is being scored for.
+            Arg4: ref float - A reference to the float result for the evaluated move score.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.PieceEvaluated">
+            <summary>
+            An event that is invoked just after the chess AI finishing evaluating a piece.
+            Pieces that belong to the 'AI' are considered friendly pieces and are generally scored with a negative value because them getting attacked is considered negative.
+            Pieces that belong to the opponents are considered unfriendly pieces and are generally scored with a positive value because them being attacked is considered positive.
+            
+            Arg0: RiddleChessAI - The instance of the chess AI that is evaluating the piece.
+            Arg1: ChessPieceType - A value that tracks the piece type.
+            Arg2: bool - A value that tracks whether the piece belongs to the 'AI', if it is a friendly piece, or not. If true the piece belongs to the AI and is considered friendly, otherwise if false the piece belongs to the opponent and is considered unfriendly.
+            Arg3: int - The move depth the piece is being scored for.
+            Arg4: ref float - A reference to the float result for the evaluated piece score.
+            </summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveType.Normal">
+            <summary>The move is just a normal move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveType.GameEnd_Opponent_NonCheckmate">
+            <summary>The opponents move results in the game ending but not due to checkmate. </summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveType.GameEnd_Self_NonCheckmate">
+            <summary>The move results in the game ending but not due to checkmate.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveType.GameEnd_Checkmate">
+            <summary>The move results in checkmate.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.PIECE_VALUES">
+            <summary>A dictionary that contains values of different chess piece types. (Key: ChessPieceType - the type of the chess piece. | Value: float - the value of the piece.).</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.PIECE_VALUE_SCALAR_FRIENDLY">
+            <summary>The scalar used to multiply friendly piece scores. (Friendly pieces being captured by opponent.)</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.PIECE_VALUE_SCALAR_UNFRIENDLY">
+            <summary>The scalar used to multiply unfriendly piece scores. (Unfriendly pieces being captured by current turn player/ai.)</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MOVE_VALUES">
+            <summary>A dictionary that contains values of different move types. (Key: MoveType - the move type. | Value: float - the value of the move.)</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MOVE_FRIENDLY_CAPTURE_VALUE_POST_THREATENED">
+            <summary>A scalar that is used to scale the 'value' of any theoretical future capture (past 'this turn') if the piece will be threatened before making the capture.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MOVE_UNFRIENDLY_CAPTURE_FUTURE_TURNS">
+            <summary>A scalar that is used to scale the 'value' of any theoretical future capture of the moving friendly piece by an unfriendly piece when consider moves taking place on future turns (non-0 depth).</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MOVE_UNFRIENDLY_CAPTURE_THIS_TURN">
+            <summary>A scalar that is used to scale the 'value' of any theoretical capture of the moving friendly piece by an unfriendly piece after it's this-turn move.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.GetMoveValue(ChessEngine.AI.Riddle.RiddleChessAI,ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.MoveType,System.Boolean,System.Int32)">
+            <summary>Returns the evaluated value of the move type.</summary>
+            <param name="pAI">The AI who is scoring the move.</param>
+            <param name="pMoveType">The type of move being made.</param>
+            <param name="pIsAIMove">true if the move is being made by the AI, otherwise false if it is the opponents move.</param>
+            <param name="pMoveDepth">The depth of the move, or put differently the number of moves in the future the move value is being considered for.</param>
+            <returns>the evaluated value of the move type.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.Riddle.Utility.RiddleMoveEvaluation.GetPieceValue(ChessEngine.AI.Riddle.RiddleChessAI,ChessEngine.ChessPieceType,System.Boolean,System.Int32)">
+            <summary>
+            Returns the evaluated value of the piece in the given context. 
+            AI pieces return a negative number because it is considered a negative thing to lose them.
+            Opponent pieces return a positive number because it is considered a positive thing to take them.
+            </summary>
+            <param name="pAI">The AI who is scoring the piece.</param>
+            <param name="pPieceType">The ChessPieceType of the piece..</param>
+            <param name="pIsAIPiece">true if the piece is 'friendly' and belongs to the AI, otherwise false if it is an opponent piece.</param>
+            <param name="pMoveDepth">The depth of the move, or put differently the number of moves in the future the piece value is being considered for.</param>
+            <returns>the evaluated value of the piece in the given context.</returns>
+        </member>
+    </members>
+</doc>

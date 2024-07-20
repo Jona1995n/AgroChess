@@ -1,0 +1,5 @@
+<linker>
+    <assembly fullname="ChessEngine">
+        <namespace fullname="ChessEngine" preserve="all"/>
+    </assembly>
+</linker>

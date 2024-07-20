@@ -1,0 +1,200 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ChessEngine.AI.Guy</name>
+    </assembly>
+    <members>
+        <member name="T:ChessEngine.AI.Guy.GuyChessAI">
+            <summary>
+            Guy chess AI.
+            
+            Guy is a well balanced chess AI that takes as much time as he is allowed to carefully consider each move and it's consequences further in the game.
+            Guys difficulty scales with allowed think time and allowed think depth.
+            Guy may think on up to the hardware limit of threads or 'MaxThreads' threads at a time.
+            </summary>
+        </member>
+        <member name="T:ChessEngine.AI.Guy.GuyChessAI.ValidMoveEntry">
+            <summary>Holds information about valid moves and attacks that may be made this turn.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.ValidMoveEntry.preMoveState">
+            <summary>The state of the board before the move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.ValidMoveEntry.moveData">
+            <summary>The data for the valid move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.ValidMoveEntry.submoveEntries">
+            <summary>A list of SubMoveEntrys that are overridden every frame while a best move is being considered. This ensures that only the most recent scoring data is considered</summary>
+        </member>
+        <member name="T:ChessEngine.AI.Guy.GuyChessAI.ScoredValidMove">
+            <summary>A scored valid move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.ScoredValidMove.score">
+            <summary>The score for the move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.ScoredValidMove.moveData">
+            <summary>The data that describes the move.</summary>
+        </member>
+        <member name="T:ChessEngine.AI.Guy.GuyChessAI.SubmoveEntry">
+            <summary>Holds information about submoves at any depth.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.SubmoveEntry.validMoveIndex">
+            <summary>The index of the move that is valid this turn for the AI in the 'valid moves' array.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.SubmoveEntry.cumulativeScore">
+            <summary>The cumulative score from 'valid moves' entry at 'validMoveIndex' to and including this move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.SubmoveEntry.postMoveState">
+            <summary>The state of the board after the move.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.Guy.GuyChessAI.IsThinking">
+            <summary>Returns true if the AI is currently thinking about its move, otherwise false if not making a move or finished thinking.</summary>
+        </member>
+        <member name="P:ChessEngine.AI.Guy.GuyChessAI.MaxThreads">
+            <summary>The maximum # of threads the AI may use to calculate its next move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.m_LockObject">
+            <summary>The thread synchronization object.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.m_CancellationToken">
+            <summary>The current cancellation token for the main thread.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.m_ValidMoves">
+            <summary>The valid moves for the AI on the current turn.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.m_Threads">
+            <summary>An array of threads used by the AI to calculate and submit moves.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.GuyChessAI.m_ScoredMoveLookup">
+            <summary>
+            A concurrent queue where threads submit their scored moves.
+            Key: int - The this-turn 'move index' the score is for (the index in the threaded list, not the main threads move list).
+            Value: ScoredValidMove - The score of the move and the move data itself.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.#ctor(ChessEngine.ChessColor)">
+            <summary>The constructor for GuyChessAI.</summary>
+            <param name="pTeam">The team the AI is playing as.</param>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.CalculateMoveScore(ChessEngine.Instance,ChessEngine.MoveData,System.Threading.CancellationTokenSource@)">
+            <summary>Gets the single-move score if the move described by pMoveData if played on the chess engine Instance, pInstance.</summary>
+            <param name="pInstance"></param>
+            <param name="pMoveData"></param>
+            <param name="pCancellationToken">A reference to a cancellation token that tracks whether or not move score calculation should be cancelled.</param>
+            <returns>The score of the move pMoveData if played in the chess instance pInstance.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnInitialized">
+            <summary>
+            Invoked when the AI is first initialized by the game.
+            Recommended to subscribe to any relevant events here.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnDeinitialized">
+            <summary>
+            Invoked when the AI is deinitialized by the game.
+            Recommended to unsubscribe to any relevant events here. (Doing so in the destructor is unreliable.)
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnBestMoveRequestUpdate">
+            <summary>
+            Invoked after every 'OnUpdate' in any frame where 'IsBestMovePending == true' and 'IsBestMoveDelayed == false'.
+            Logic to determine best moves should not be executed in this loop as a submission delay causes it to not be executed.
+            It is best practice to submit ready best moves in this callback unless they were demanded, this will prevent any non-demanded submissions while there is a best move submission delay set.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnBestMoveRequested(System.Int32,System.Single)">
+            <summary>Invoked when a best move is requested.</summary>
+            <param name="pMaxDepth"></param>
+            <param name="pMaxTime"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.StopThinking">
+            <summary>Forces the AI to stop thinking about a move.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnUpdate">
+            <summary>Invoked every frame that the AI is updated.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnBestMoveDemanded">
+            <summary>Invoked after the AI demands a best move be submitted immediately.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.OnBestMoveSubmitted(ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked after the AI submits a best move.</summary>
+            <param name="pFrom"></param>
+            <param name="pTo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.SubmitBestMove">
+            <summary>Determines and submits a 'best move' instantly.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.SubmitBestMove(ChessEngine.MoveData)">
+            <summary>Submits a 'best move' with the given move data.</summary>
+            <param name="pMoveData"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.GuyChessAI.Thread_ScoreMoves(ChessEngine.MoveData[],ChessEngine.Serialization.SerializedChessInstance,System.Threading.CancellationTokenSource)">
+            <summary>Invoked on a thread. Given an array of moves to score.</summary>
+            <param name="pMoves"></param>
+            <param name="pPreMoveState"></param>
+            <param name="pCancellationToken"></param>
+        </member>
+        <member name="T:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation">
+            <summary>
+            A public static class that contains values for different chess moves and pieces.
+            </summary>
+            Author: Mathew Aloisio
+        </member>
+        <member name="E:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveEvaluated">
+            <summary>
+            An event that is invoked just after the chess AI finishing evaluating a move.
+            Moves being made by 'AI' are considered friendly moves and are generally scored with a positive value.
+            Moves being made by opponents are considered unfriendly moves and are generally scored with a negative value.
+            
+            Arg0: GuyChessAI - The instance of the chess AI that is evaluating the move.
+            Arg1: MoveType - A value that tracks whether the move was made by a king or not. If true the move was made by a king, if false it was made by a normal pawn piece.
+            Arg2: bool - A value that tracks whether the move was made by the 'AI', if it was a friendly move, or not. If true the move was made by the AI and is considered friendly, otherwise if false it is made by the opponent and considered unfriendly.
+            Arg3: ref float - A reference to the float result for the evaluated move score.
+            </summary>
+        </member>
+        <member name="E:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.PieceEvaluated">
+            <summary>
+            An event that is invoked just after the chess AI finishing evaluating a piece.
+            Pieces that belong to the 'AI' are considered friendly pieces and are generally scored with a negative value because them getting attacked is considered negative.
+            Pieces that belong to the opponents are considered unfriendly pieces and are generally scored with a positive value because them being attacked is considered positive.
+            
+            Arg0: GuyChessAI - The instance of the chess AI that is evaluating the piece.
+            Arg1: ChessPieceType - A value that tracks the piece type.
+            Arg2: bool - A value that tracks whether the piece belongs to the 'AI', if it is a friendly piece, or not. If true the piece belongs to the AI and is considered friendly, otherwise if false the piece belongs to the opponent and is considered unfriendly.
+            Arg3: ref float - A reference to the float result for the evaluated piece score.
+            </summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveType.Normal">
+            <summary>The move is just a normal move.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveType.GameEnd_Opponent_NonCheckmate">
+            <summary>The opponents move results in the game ending but not due to checkmate. </summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveType.GameEnd_Self_NonCheckmate">
+            <summary>The move results in the game ending but not due to checkmate.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveType.GameEnd_Checkmate">
+            <summary>The move results in checkmate.</summary>
+        </member>
+        <member name="F:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.PIECE_VALUES">
+            <summary>A dictionary that contains values of different chess piece Types. (Key: ChessPieceType - the type of the chess piece. | Value: float - the value of the piece.).</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.GetMoveValue(ChessEngine.AI.Guy.GuyChessAI,ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.MoveType,System.Boolean)">
+            <summary>Returns the evaluated value of the move type.</summary>
+            <param name="pAI">The AI who is scoring the move.</param>
+            <param name="pMoveType">The type of move being made.</param>
+            <param name="pIsAIMove">true if the move is being made by the AI, otherwise false if it is the opponents move.</param>
+            <returns>the evaluated value of the move type.</returns>
+        </member>
+        <member name="M:ChessEngine.AI.Guy.Utility.GuyMoveEvaluation.GetPieceValue(ChessEngine.AI.Guy.GuyChessAI,ChessEngine.ChessPieceType,System.Boolean)">
+            <summary>
+            Returns the evaluated value of the piece in the given context. 
+            AI pieces return a negative number because it is considered a negative thing to lose them.
+            Opponent pieces return a positive number because it is considered a positive thing to take them.
+            </summary>
+            <param name="pAI">The AI who is scoring the piece.</param>
+            <param name="pPieceType">The ChessPieceType of the piece..</param>
+            <param name="pIsAIPiece">true if the piece is 'friendly' and belongs to the AI, otherwise false if it is an opponent piece.</param>
+            <returns>the evaluated value of the piece in the given context.</returns>
+        </member>
+    </members>
+</doc>

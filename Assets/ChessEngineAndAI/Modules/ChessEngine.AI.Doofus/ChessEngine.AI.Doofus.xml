@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>ChessEngine.AI.Doofus</name>
+    </assembly>
+    <members>
+        <member name="T:ChessEngine.AI.Doofus.DoofusChessAI">
+            <summary>
+            Doofus chess AI.
+            
+            Doofus is not very bright, he will always make a tit-for-tat trade, he will never pass up an opportunity to take a piece, and he rarely makes the best possible move.
+            Doofus does not hesitate and always moves quickly.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.#ctor(ChessEngine.ChessColor)">
+            <summary>The constructor for DoofusChessAI.</summary>
+            <param name="pTeam">The team the AI is playing as.</param>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnInitialized">
+            <summary>
+            Invoked when the AI is first initialized by the game.
+            Recommended to subscribe to any relevant events here.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnDeinitialized">
+            <summary>
+            Invoked when the AI is deinitialized by the game.
+            Recommended to unsubscribe to any relevant events here. (Doing so in the destructor is unreliable.)
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnUpdate">
+            <summary>
+            Invoked after every 'Update' call.
+            Useful for executing any logic every frame.
+            Recommended AI best move determination logic is here, you can use 'IsBestMovePending' to check if there is a best move to limit planning time only to during best move requests.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnBestMoveRequestUpdate">
+            <summary>
+            Invoked after every 'OnUpdate' in any frame where 'IsBestMovePending == true' and 'IsBestMoveDelayed == false'.
+            Logic to determine best moves should not be executed in this loop as a submission delay causes it to not be executed.
+            It is best practice to submit ready best moves in this callback unless they were demanded, this will prevent any non-demanded submissions while there is a best move submission delay set.
+            </summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnBestMoveRequested(System.Int32,System.Single)">
+            <summary>Invoked when a best move is requested.</summary>
+            <param name="pMaxDepth"></param>
+            <param name="pMaxTime"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnBestMoveDemanded">
+            <summary>Invoked after the AI demands a best move be submitted immediately.</summary>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.OnBestMoveSubmitted(ChessEngine.TileIndex,ChessEngine.TileIndex)">
+            <summary>Invoked after the AI submits a best move.</summary>
+            <param name="pFrom"></param>
+            <param name="pTo"></param>
+        </member>
+        <member name="M:ChessEngine.AI.Doofus.DoofusChessAI.SubmitBestMove">
+            <summary>Determines and submits a 'best move' instantly.</summary>
+        </member>
+    </members>
+</doc>
