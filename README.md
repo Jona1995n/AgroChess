@@ -1,8 +1,4 @@
-AgroChess
-Client Project
-Unity Version: 2022.3.13f1
-
-Privacy Policy
+# AgroChess Privacy Policy
 
 Effective Date: July 22, 2024
 
